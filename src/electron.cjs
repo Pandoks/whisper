@@ -25,10 +25,7 @@ function createWindow() {
 		backgroundColor: 'whitesmoke',
 		titleBarStyle: 'hidden',
 		autoHideMenuBar: true,
-		trafficLightPosition: {
-			x: 17,
-			y: 32,
-		},
+		frame: false,
 		minHeight: 450,
 		minWidth: 500,
 		webPreferences: {
