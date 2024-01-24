@@ -2,6 +2,7 @@ export class Domain {
 	private domain: string | string[] = ''; // domain.tld
 	private whiteList: string[] = []; // only use whitelist if blockAllToggle is true
 	private blackList: string[] = []; // only use blacklist if blockAllToggle is false
+	private modifyList: string[] = [];
 	private blockAllToggle: boolean = false;
 
 	constructor(domain: string | string[]) {
@@ -53,6 +54,18 @@ export class Domain {
 
 		if (typeof this.domain === 'string') {
 			this.blackList.push(`${subdomain}.${this.domain}/${slug}`);
+			return this;
+		}
+
+		for (const domain of this.domain) {
+			this.blackList.push(`${subdomain}.${domain}/${slug}`);
+		}
+		return this;
+	}
+
+	public modify(subdomain: string, slug: string) {
+		if (typeof this.domain === 'string') {
+			this.modifyList.push(`${subdomain}.${this.domain}/${slug}`);
 			return this;
 		}
 
