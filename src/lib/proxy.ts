@@ -85,6 +85,7 @@ export class Proxy {
 	private blackList: Domain[] = []; // only use blacklist if blockAllToggle is false
 	private modifyList: Domain[] = [];
 	private blockAllToggle: boolean = false;
+	private startStatus: boolean = false;
 
 	private serviceGUID: string;
 	private serviceName: string;
@@ -149,25 +150,31 @@ export class Proxy {
 		return this;
 	}
 
-	private writePACBlockList(blockList: string[]) {
-		const fileName = 'whisper.pac';
-		const filePath = path.join(__dirname, fileName);
-		const fileContent = fs.readFileSync(filePath, 'utf-8');
-		const lines = fileContent.split('\n');
-
-		const matchPattern = 'let blocklist = ';
-		const replacementText = `  let blocklist = [${blockList
-			.map((item) => `"${item}"`)
-			.join(', ')}];`;
-
-		if (lines.length < 2) {
-			throw new Error('Whisper PAC file is too short');
-		} else if (!lines[1].includes(matchPattern)) {
-			throw new Error('Whisper PAC file domain list is modified incorrectly');
+	public start() {
+		if (this.startStatus) {
+			throw new Error('Proxy is already started');
 		}
+	}
 
-		lines[1] = replacementText;
-		const newFileContent = lines.join('\n');
-		fs.writeFileSync(filePath, newFileContent, 'utf-8');
+	public stop() {}
+
+	public udpate() {}
+
+	public writePACBlackList(blockList: string[]) {
+		if (this.blockAllToggle) {
+			throw new Error("Can't update blocklist because Whisper is blocking all");
+		}
+		const filePath = path.join(__dirname, 'whisper.pac');
+		const content = `function FindProxyForURL(url, host) {\n\
+  let blocklist = [${blockList.map((domain) => `'${domain}'`).join(', ')}];\n\
+  for (const domain of blocklist) {\n\
+    if (dnsDomainIs(host, domain)) {\n\
+      return "PROXY proxy.server:port";\n\
+    }\n\
+  }\n\
+  return "DIRECT";\n\
+}`;
+
+		fs.writeFileSync(filePath, content, 'utf-8');
 	}
 }
