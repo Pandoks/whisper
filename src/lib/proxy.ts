@@ -1,3 +1,6 @@
+import { execSync } from 'child_process';
+import { execute } from '$lib/utils';
+
 export class Domain {
 	private domain: string | string[] = ''; // domain.tld
 	private whiteList: string[] = []; // only use whitelist if blockAllToggle is true
@@ -73,5 +76,40 @@ export class Domain {
 			this.blackList.push(`${subdomain}.${domain}/${slug}`);
 		}
 		return this;
+	}
+}
+
+export class Proxy {
+	private serviceGUID: string;
+	private serviceName: string;
+
+	constructor() {
+		let serviceGUID = execute('open|||get State:/Network/Global/IPv4|||d.show')
+			.split('\n')
+			.find((line) => line.includes('PrimaryService'))
+			?.split(' ')[2];
+		if (!serviceGUID) {
+			throw new Error('Primary service not found.');
+		}
+
+		let serviceName = execute(`open|||get Setup:/Network/Service${serviceGUID}|||d.show`)
+			.split('\n')
+			.find((line) => line.includes('UserDefinedName'))
+			?.split(': ')[1];
+		if (!serviceName) {
+			throw new Error('Service name not found.');
+		}
+
+		this.serviceGUID = serviceGUID;
+		this.serviceName = serviceName;
+		return this;
+	}
+
+	public getServiceGUID() {
+		return this.serviceGUID;
+	}
+
+	public getServiceName() {
+		return this.serviceName;
 	}
 }

@@ -69,6 +69,7 @@ contextMenu({
 
 function loadVite(port) {
 	mainWindow.loadURL(`http://localhost:${port}`).catch((e) => {
+		// mainWindow.loadURL('https://www.youtube.com').catch((e) => {
 		console.log('Error loading URL, retrying', e);
 		setTimeout(() => {
 			loadVite(port);
