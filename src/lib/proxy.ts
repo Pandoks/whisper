@@ -72,13 +72,18 @@ export class Domain {
 		}
 
 		for (const domain of this.domain) {
-			this.blackList.push(`${subdomain}.${domain}/${slug}`);
+			this.modifyList.push(`${subdomain}.${domain}/${slug}`);
 		}
 		return this;
 	}
 }
 
 export class Proxy {
+	private whiteList: Domain[] = []; // only use whitelist if blockAllToggle is true
+	private blackList: Domain[] = []; // only use blacklist if blockAllToggle is false
+	private modifyList: Domain[] = [];
+	private blockAllToggle: boolean = false;
+
 	private serviceGUID: string;
 	private serviceName: string;
 
@@ -116,11 +121,29 @@ export class Proxy {
 		return this;
 	}
 
-	public getServiceGUID() {
-		return this.serviceGUID;
+	public blockAll() {
+		this.blockAllToggle = true;
+		return this;
 	}
 
-	public getServiceName() {
-		return this.serviceName;
+	public whitelist(domain: Domain) {
+		if (!this.blockAllToggle) {
+			throw new Error('Whitelist only works if blocking all domains');
+		}
+		this.whiteList.push(domain);
+		return this;
+	}
+
+	public blacklist(domain: Domain) {
+		if (this.blockAllToggle) {
+			throw new Error("Blacklist doesn't work when you're blocking everything already");
+		}
+		this.blackList.push(domain);
+		return this;
+	}
+
+	public modify(domain: Domain) {
+		this.modifyList.push(domain);
+		return this;
 	}
 }
