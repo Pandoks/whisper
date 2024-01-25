@@ -1,4 +1,6 @@
 import { execSync } from 'child_process';
+import path from 'path';
+import fs from 'fs';
 
 export class Domain {
 	private domain: string | string[] = ''; // domain.tld
@@ -145,5 +147,27 @@ export class Proxy {
 	public modify(domain: Domain) {
 		this.modifyList.push(domain);
 		return this;
+	}
+
+	private writePACBlockList(blockList: string[]) {
+		const fileName = 'whisper.pac';
+		const filePath = path.join(__dirname, fileName);
+		const fileContent = fs.readFileSync(filePath, 'utf-8');
+		const lines = fileContent.split('\n');
+
+		const matchPattern = 'let blocklist = ';
+		const replacementText = `  let blocklist = [${blockList
+			.map((item) => `"${item}"`)
+			.join(', ')}];`;
+
+		if (lines.length < 2) {
+			throw new Error('Whisper PAC file is too short');
+		} else if (!lines[1].includes(matchPattern)) {
+			throw new Error('Whisper PAC file domain list is modified incorrectly');
+		}
+
+		lines[1] = replacementText;
+		const newFileContent = lines.join('\n');
+		fs.writeFileSync(filePath, newFileContent, 'utf-8');
 	}
 }
