@@ -1,5 +1,4 @@
 import { execSync } from 'child_process';
-import { execute } from '$lib/utils';
 
 export class Domain {
 	private domain: string | string[] = ''; // domain.tld
@@ -84,18 +83,30 @@ export class Proxy {
 	private serviceName: string;
 
 	constructor() {
-		let serviceGUID = execute('open|||get State:/Network/Global/IPv4|||d.show')
-			.split('\n')
-			.find((line) => line.includes('PrimaryService'))
-			?.split(' ')[2];
+		let serviceGUID = execSync(
+			`echo "open|||get State:/Network/Global/IPv4|||d.show"\
+        | tr '|||' '\\n'\
+        | scutil\
+        | grep "PrimaryService"\
+        | awk '{print $3}'`,
+			{ encoding: 'utf-8' },
+		)
+			.toString()
+			.trim();
 		if (!serviceGUID) {
 			throw new Error('Primary service not found.');
 		}
 
-		let serviceName = execute(`open|||get Setup:/Network/Service${serviceGUID}|||d.show`)
-			.split('\n')
-			.find((line) => line.includes('UserDefinedName'))
-			?.split(': ')[1];
+		let serviceName = execSync(
+			`echo "open|||get Setup:/Network/Service/${serviceGUID}|||d.show"\
+          | tr '|||' '\\n'\
+          | scutil\
+          | grep "UserDefinedName"\
+          | awk -F': ' '{print $2}'`,
+			{ encoding: 'utf-8' },
+		)
+			.toString()
+			.trim();
 		if (!serviceName) {
 			throw new Error('Service name not found.');
 		}
