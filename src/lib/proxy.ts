@@ -160,7 +160,7 @@ export class Proxy {
 
 	public udpate() {}
 
-	public writePACBlackList(blockList: string[]) {
+	private writePACBlackList(blockList: string[]) {
 		if (this.blockAllToggle) {
 			throw new Error("Can't update blocklist because Whisper is blocking all");
 		}
@@ -169,10 +169,28 @@ export class Proxy {
   let blocklist = [${blockList.map((domain) => `'${domain}'`).join(', ')}];\n\
   for (const domain of blocklist) {\n\
     if (dnsDomainIs(host, domain)) {\n\
-      return "PROXY proxy.server:port";\n\
+      return 'PROXY proxy.server:port';\n\
     }\n\
   }\n\
-  return "DIRECT";\n\
+  return 'DIRECT';\n\
+}`;
+
+		fs.writeFileSync(filePath, content, 'utf-8');
+	}
+
+	public writePACWhiteList(whiteList: string[]) {
+		if (!this.blockAllToggle) {
+			throw new Error("Can't update whitelist because Whisper isn't blocking all");
+		}
+		const filePath = path.join(__dirname, 'whisper.pac');
+		const content = `function FindProxyForURL(url, host) {\n\
+  let whitelist = [${whiteList.map((domain) => `'${domain}'`).join(', ')}];\n\
+  for (const domain of whitelist) {\n\
+    if (dnsDomainIs(host, domain)) {\n\
+      return 'DIRECT';\n\
+    }\n\
+  }\n\
+  return 'PROXY proxy.server:port';\n\
 }`;
 
 		fs.writeFileSync(filePath, content, 'utf-8');
