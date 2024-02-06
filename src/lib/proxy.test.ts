@@ -1,10 +1,7 @@
 import { test, expect, describe } from 'vitest';
-import { Proxy } from '$lib/proxy';
+import { Domain, Proxy } from '$lib/proxy';
 
 describe('Proxy', () => {
-	const proxy = new Proxy();
-	proxy.blockAll();
-	test('whitelist', () => {
-		proxy.writePACWhiteList(['test']);
-	});
+	const proxy = new Proxy().blacklist(new Domain('news.ycombinator.com'));
+	proxy.start();
 });

@@ -85,8 +85,15 @@ export class Proxy {
 	private blackList: Domain[] = []; // only use blacklist if blockAllToggle is false
 	private modifyList: Domain[] = [];
 	private blockAllToggle: boolean = false;
+
 	private startStatus: boolean = false;
 
+	private pacFilePath: string = `file://${path.join(
+		__dirname,
+		'..',
+		'routes/whisper.pac',
+		'whisper.pac',
+	)}`;
 	private serviceGUID: string;
 	private serviceName: string;
 
@@ -154,9 +161,28 @@ export class Proxy {
 		if (this.startStatus) {
 			throw new Error('Proxy is already started');
 		}
+
+		if (this.blockAllToggle) {
+			this.writePACWhiteList(this.extractDomains(this.whiteList));
+		} else {
+			this.writePACBlackList(this.extractDomains(this.blackList));
+		}
+
+		// TODO: start proxy and deal with modification
+		execSync(`networksetup -setautoproxyurl "${this.serviceName}" "${this.pacFilePath}"`);
+		this.startStatus = true;
+		return this;
 	}
 
-	public stop() {}
+	public stop() {
+		if (!this.startStatus) {
+			throw new Error("Proxy hasn't started");
+		}
+
+		execSync(`networksetup -setautoproxyurl "${this.serviceName}" ""`);
+		this.startStatus = false;
+		return this;
+	}
 
 	public udpate() {}
 
@@ -164,12 +190,12 @@ export class Proxy {
 		if (this.blockAllToggle) {
 			throw new Error("Can't update blocklist because Whisper is blocking all");
 		}
-		const filePath = path.join(__dirname, 'whisper.pac');
+		const filePath = path.join(__dirname, '..', 'routes/whisper.pac', 'whisper.pac');
 		const content = `function FindProxyForURL(url, host) {\n\
   let blocklist = [${blockList.map((domain) => `'${domain}'`).join(', ')}];\n\
   for (const domain of blocklist) {\n\
     if (dnsDomainIs(host, domain)) {\n\
-      return 'PROXY proxy.server:port';\n\
+      return 'PROXY 127.0.0.1';\n\
     }\n\
   }\n\
   return 'DIRECT';\n\
@@ -178,11 +204,11 @@ export class Proxy {
 		fs.writeFileSync(filePath, content, 'utf-8');
 	}
 
-	public writePACWhiteList(whiteList: string[]) {
+	private writePACWhiteList(whiteList: string[]) {
 		if (!this.blockAllToggle) {
 			throw new Error("Can't update whitelist because Whisper isn't blocking all");
 		}
-		const filePath = path.join(__dirname, 'whisper.pac');
+		const filePath = path.join(__dirname, '..', 'routes/whisper.pac', 'whisper.pac');
 		const content = `function FindProxyForURL(url, host) {\n\
   let whitelist = [${whiteList.map((domain) => `'${domain}'`).join(', ')}];\n\
   for (const domain of whitelist) {\n\
@@ -190,9 +216,23 @@ export class Proxy {
       return 'DIRECT';\n\
     }\n\
   }\n\
-  return 'PROXY proxy.server:port';\n\
+  return 'PROXY 127.0.0.1';\n\
 }`;
 
 		fs.writeFileSync(filePath, content, 'utf-8');
+	}
+
+	private extractDomains(domains: Domain[]): string[] {
+		let list: string[] = [];
+		for (const domain of domains) {
+			const domainList = domain.getDomain();
+			if (typeof domainList === 'string') {
+				list.push(domainList);
+			} else {
+				list = list.concat(domainList);
+			}
+		}
+
+		return list;
 	}
 }
