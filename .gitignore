@@ -17,5 +17,5 @@ pnpm-lock.yaml
 
 out/
 
-*pac
+*.pac
 
