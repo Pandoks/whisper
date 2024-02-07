@@ -112,7 +112,7 @@ function startPACServer() {
 	server.listen(0, () => {
 		const port = server.address().port;
 		console.log(`Server is listening on port ${port}`);
-		module.exports(port);
+		// module.exports(port);
 	});
 }
 

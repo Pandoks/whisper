@@ -31,5 +31,5 @@
 			"$app/*": [".svelte/dev/runtime/app/*", ".svelte/build/runtime/app/*"]
 		}
 	},
-	"include": ["src/**/*.d.ts", "src/**/*.ts", "src/**/*.svelte", "src/electron.js"]
+	"include": ["src/**/*.d.ts", "src/**/*.ts", "src/**/*.svelte", "src/electron.js", "src/lib/proxy.test.js"]
 }

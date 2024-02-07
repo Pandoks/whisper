@@ -32,9 +32,38 @@ describe('Proxy', () => {
 	// @ts-ignore
 	const PORT = mockServer.address()!.port;
 
+	let serviceGUID = execSync(
+		`echo "open|||get State:/Network/Global/IPv4|||d.show"\
+        | tr '|||' '\\n'\
+        | scutil\
+        | grep "PrimaryService"\
+        | awk '{print $3}'`,
+		{ encoding: 'utf-8' },
+	)
+		.toString()
+		.trim();
+	let serviceName = execSync(
+		`echo "open|||get Setup:/Network/Service/${serviceGUID}|||d.show"\
+          | tr '|||' '\\n'\
+          | scutil\
+          | grep "UserDefinedName"\
+          | awk -F': ' '{print $2}'`,
+		{ encoding: 'utf-8' },
+	)
+		.toString()
+		.trim();
+
+	const backupPAC = execSync(`networksetup -getautoproxyurl "${serviceName}"`)
+		.toString()
+		.split('\n')[0]
+		.split(' ')[1];
+
 	const proxy = new Proxy(PORT).blacklist(new Domain('news.ycombinator.com'));
-	const serviceName = proxy.getServiceName();
 	execSync(`networksetup -setautoproxystate "${serviceName}" off`); // reset PAC settings
+
+	test('Proxy should store the backup PAC URL that was originally there', () => {
+		expect(proxy.getPACBackupURL()).toBe(backupPAC);
+	});
 
 	test('PAC network settings should be set', () => {
 		proxy.start();
@@ -51,4 +80,6 @@ describe('Proxy', () => {
 			`URL: http://localhost:${PORT}/whisper.pac\nEnabled: No\n`,
 		);
 	});
+
+	execSync(`networksetup -setautoproxyurl "${serviceName}" "${backupPAC}"`);
 });

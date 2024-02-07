@@ -16,3 +16,6 @@ pnpm-lock.yaml
 .DS_Store
 
 out/
+
+*pac
+

@@ -91,6 +91,7 @@ export class Proxy {
 	private pacFilePath: string = `${path.join(__dirname, '..', 'whisper.pac')}`;
 	private serviceName: string;
 	private serverPort: number;
+	private pacBackupURL: string = '';
 
 	constructor(serverPort: number) {
 		let serviceGUID = execSync(
@@ -122,12 +123,21 @@ export class Proxy {
 		}
 
 		this.serviceName = serviceName;
+
+		this.pacBackupURL = execSync(`networksetup -getautoproxyurl "${this.serviceName}"`)
+			.toString()
+			.split('\n')[0]
+			.split(' ')[1];
 		this.serverPort = serverPort;
 		return this;
 	}
 
 	public getServiceName() {
 		return this.serviceName;
+	}
+
+	public getPACBackupURL() {
+		return this.pacBackupURL;
 	}
 
 	public blockAll() {
