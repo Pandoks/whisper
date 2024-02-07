@@ -3,6 +3,7 @@ const { app, BrowserWindow, ipcMain } = require('electron');
 const contextMenu = require('electron-context-menu');
 const serve = require('electron-serve');
 const path = require('path');
+const http = require('http');
 
 try {
 	require('electron-reloader')(module);
@@ -69,7 +70,6 @@ contextMenu({
 
 function loadVite(port) {
 	mainWindow.loadURL(`http://localhost:${port}`).catch((e) => {
-		// mainWindow.loadURL('https://www.youtube.com').catch((e) => {
 		console.log('Error loading URL, retrying', e);
 		setTimeout(() => {
 			loadVite(port);
@@ -87,12 +87,38 @@ function createMainWindow() {
 	else serveURL(mainWindow);
 }
 
-app.once('ready', createMainWindow);
+function startPACServer() {
+	const server = http.createServer((request, response) => {
+		if (request.method !== 'GET' || request.url !== '/pac') {
+			response.statusCode = 404;
+			response.setHeader('Content-Type', 'text/plain');
+			response.write('Bad Request');
+			response.end();
+		}
+
+		const pacFileContent = fs.readFileSync('whisper.pac', 'utf-8');
+		response.statusCode = 200;
+		response.setHeader('Content-Type', 'application/x-ns-proxy-autoconfig');
+		response.write(pacFileContent);
+		response.end();
+	});
+	server.listen(0, () => {
+		const port = server.address().port;
+		console.log(`Server is listening on port ${port}`);
+	});
+}
+
+app.once('ready', () => {
+	createMainWindow();
+	startPACServer();
+});
+
 app.on('activate', () => {
 	if (!mainWindow) {
 		createMainWindow();
 	}
 });
+
 app.on('window-all-closed', () => {
 	if (process.platform !== 'darwin') app.quit();
 });
