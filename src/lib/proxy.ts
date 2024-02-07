@@ -88,15 +88,11 @@ export class Proxy {
 
 	private startStatus: boolean = false;
 
-	private pacFilePath: string = `${path.join(
-		__dirname,
-		'..',
-		'routes/whisper.pac',
-		'whisper.pac',
-	)}`;
+	private pacFilePath: string = `${path.join(__dirname, '..', 'whisper.pac')}`;
 	private serviceName: string;
+	private serverPort: number;
 
-	constructor() {
+	constructor(serverPort: number) {
 		let serviceGUID = execSync(
 			`echo "open|||get State:/Network/Global/IPv4|||d.show"\
         | tr '|||' '\\n'\
@@ -126,7 +122,12 @@ export class Proxy {
 		}
 
 		this.serviceName = serviceName;
+		this.serverPort = serverPort;
 		return this;
+	}
+
+	public getServiceName() {
+		return this.serviceName;
 	}
 
 	public blockAll() {
@@ -167,7 +168,9 @@ export class Proxy {
 		}
 
 		// TODO: start proxy and deal with modification
-		execSync(`networksetup -setautoproxyurl "${this.serviceName}" "${this.pacFilePath}"`);
+		execSync(
+			`networksetup -setautoproxyurl "${this.serviceName}" "http://localhost:${this.serverPort}/whisper.pac"`,
+		);
 		this.startStatus = true;
 		return this;
 	}
@@ -177,7 +180,7 @@ export class Proxy {
 			throw new Error("Proxy hasn't started");
 		}
 
-		execSync(`networksetup -setautoproxyurl "${this.serviceName}" ""`);
+		execSync(`networksetup -setautoproxystate "${this.serviceName}" off`);
 		this.startStatus = false;
 		return this;
 	}

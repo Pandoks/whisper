@@ -4,6 +4,7 @@ const contextMenu = require('electron-context-menu');
 const serve = require('electron-serve');
 const path = require('path');
 const http = require('http');
+const fs = require('fs');
 
 try {
 	require('electron-reloader')(module);
@@ -89,7 +90,7 @@ function createMainWindow() {
 
 function startPACServer() {
 	const server = http.createServer((request, response) => {
-		if (request.method !== 'GET' || request.url !== '/pac') {
+		if (request.method !== 'GET' || request.url !== '/whisper.pac') {
 			response.statusCode = 404;
 			response.setHeader('Content-Type', 'text/plain');
 			response.write('Bad Request');
@@ -101,19 +102,17 @@ function startPACServer() {
 		response.setHeader('Access-Control-Allow-Methods', 'GET');
 		response.setHeader('Access-Control-Allow-Headers', 'Content-Type');
 
-		// const pacFileContent = fs.readFileSync('whisper.pac', 'utf-8');
+		const pacFileContent = fs.readFileSync('./src/whisper.pac', 'utf-8');
 		response.statusCode = 200;
-		// response.setHeader('Content-Type', 'application/x-ns-proxy-autoconfig');
-		response.setHeader('Content-Type', 'text/plain');
-		// response.write(pacFileContent);
-		response.write('Hello World');
-		console.log('API Endpoint HIT');
+		response.setHeader('Content-Type', 'application/x-ns-proxy-autoconfig');
+		response.write(pacFileContent);
 		response.end();
 	});
 
 	server.listen(0, () => {
 		const port = server.address().port;
 		console.log(`Server is listening on port ${port}`);
+		module.exports(port);
 	});
 }
 
