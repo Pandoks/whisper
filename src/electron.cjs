@@ -89,6 +89,10 @@ function createMainWindow() {
 
 function startPACServer() {
 	const server = http.createServer((request, response) => {
+		response.setHeader('Access-Control-Allow-Origin', '*');
+		response.setHeader('Access-Control-Allow-Methods', 'GET');
+		response.setHeader('Access-Control-Allow-Headers', 'Content-Type');
+
 		if (request.method !== 'GET' || request.url !== '/pac') {
 			response.statusCode = 404;
 			response.setHeader('Content-Type', 'text/plain');
@@ -96,10 +100,13 @@ function startPACServer() {
 			response.end();
 		}
 
-		const pacFileContent = fs.readFileSync('whisper.pac', 'utf-8');
+		// const pacFileContent = fs.readFileSync('whisper.pac', 'utf-8');
 		response.statusCode = 200;
-		response.setHeader('Content-Type', 'application/x-ns-proxy-autoconfig');
-		response.write(pacFileContent);
+		// response.setHeader('Content-Type', 'application/x-ns-proxy-autoconfig');
+		response.setHeader('Content-Type', 'text/plain');
+		// response.write(pacFileContent);
+		response.write('Hello World');
+		console.log('API Endpoint HIT');
 		response.end();
 	});
 	server.listen(0, () => {
