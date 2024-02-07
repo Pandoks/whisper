@@ -1,4 +1,9 @@
 function FindProxyForURL(url, host) {
-    return 'PROXY 127.0.0.1';
+  let blocklist = ['news.ycombinator.com'];
+  for (const domain of blocklist) {
+    if (dnsDomainIs(host, domain)) {
+      return 'PROXY 127.0.0.1';
+    }
+  }
+  return 'DIRECT';
 }
-

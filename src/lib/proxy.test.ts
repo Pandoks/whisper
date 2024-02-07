@@ -36,5 +36,19 @@ describe('Proxy', () => {
 	const serviceName = proxy.getServiceName();
 	execSync(`networksetup -setautoproxystate "${serviceName}" off`); // reset PAC settings
 
-	proxy.start();
+	test('PAC network settings should be set', () => {
+		proxy.start();
+		expect(execSync(`networksetup -getautoproxyurl "${serviceName}"`).toString()).toBe(
+			`URL: http://localhost:${PORT}/whisper.pac\nEnabled: Yes\n`,
+		);
+		proxy.stop();
+	});
+
+	test('PAC network settings should be turned off', () => {
+		proxy.start();
+		proxy.stop();
+		expect(execSync(`networksetup -getautoproxyurl "${serviceName}"`).toString()).toBe(
+			`URL: http://localhost:${PORT}/whisper.pac\nEnabled: No\n`,
+		);
+	});
 });
