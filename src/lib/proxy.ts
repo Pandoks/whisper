@@ -88,13 +88,12 @@ export class Proxy {
 
 	private startStatus: boolean = false;
 
-	private pacFilePath: string = `file://${path.join(
+	private pacFilePath: string = `${path.join(
 		__dirname,
 		'..',
 		'routes/whisper.pac',
 		'whisper.pac',
 	)}`;
-	private serviceGUID: string;
 	private serviceName: string;
 
 	constructor() {
@@ -126,7 +125,6 @@ export class Proxy {
 			throw new Error('Service name not found.');
 		}
 
-		this.serviceGUID = serviceGUID;
 		this.serviceName = serviceName;
 		return this;
 	}
@@ -190,7 +188,6 @@ export class Proxy {
 		if (this.blockAllToggle) {
 			throw new Error("Can't update blocklist because Whisper is blocking all");
 		}
-		const filePath = path.join(__dirname, '..', 'routes/whisper.pac', 'whisper.pac');
 		const content = `function FindProxyForURL(url, host) {\n\
   let blocklist = [${blockList.map((domain) => `'${domain}'`).join(', ')}];\n\
   for (const domain of blocklist) {\n\
@@ -201,14 +198,13 @@ export class Proxy {
   return 'DIRECT';\n\
 }`;
 
-		fs.writeFileSync(filePath, content, 'utf-8');
+		fs.writeFileSync(this.pacFilePath, content, 'utf-8');
 	}
 
 	private writePACWhiteList(whiteList: string[]) {
 		if (!this.blockAllToggle) {
 			throw new Error("Can't update whitelist because Whisper isn't blocking all");
 		}
-		const filePath = path.join(__dirname, '..', 'routes/whisper.pac', 'whisper.pac');
 		const content = `function FindProxyForURL(url, host) {\n\
   let whitelist = [${whiteList.map((domain) => `'${domain}'`).join(', ')}];\n\
   for (const domain of whitelist) {\n\
@@ -219,7 +215,7 @@ export class Proxy {
   return 'PROXY 127.0.0.1';\n\
 }`;
 
-		fs.writeFileSync(filePath, content, 'utf-8');
+		fs.writeFileSync(this.pacFilePath, content, 'utf-8');
 	}
 
 	private extractDomains(domains: Domain[]): string[] {
